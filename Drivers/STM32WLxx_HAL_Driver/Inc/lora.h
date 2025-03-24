@@ -30,8 +30,8 @@ bool lora_waitAvailableTimeout(uint32_t timeout);
 // Sets the transmit frequency in MHz (e.g., 868.0 or 915.0)
 bool lora_setFrequency(float center);
 
-// Configures the transmit power level and path (PA_BOOST or RFO)
-void lora_setTxPower(int8_t power, bool useRFO);
+// sets the transmit power level
+bool lora_setTxPower(uint8_t power);
 
 // Checks whether a packet is available (RX done)
 bool lora_available();
