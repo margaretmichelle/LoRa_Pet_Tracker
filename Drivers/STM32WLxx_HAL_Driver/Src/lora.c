@@ -55,32 +55,39 @@ bool lora_init()
 
 bool lora_send(const uint8_t* data, uint8_t len)
 {
-    // max message length?
-
-    // set up fifo
-    HAL_SUBGHZ_WriteRegister(&hsubghz, SUBGHZ_RADIO_WRITE_BUFFER, 0x00); // FIFO_TX_BASE_ADDR = 0
-    HAL_SUBGHZ_WriteRegister(&hsubghz, SUBGHZ_RADIO_WRITE_REGISTER, 0x00); // FIFO_ADDR_PTR = 0
-    HAL_SUBGHZ_WriteRegister(&hsubghz, 0x22, len);  // PAYLOAD_LENGTH, what is 0x22 lol
-
-    if (HAL_SUBGHZ_WriteBuffer(&hsubghz, 0x00, (uint8_t*)data, len) != HAL_OK)  // 0x00 is the fifo data access register
+    // write payload to FIFO (starting at offset 0)
+    // only need to write to FIFO via HAL_SUBGHZ_WriteBuffer(), dont need to manually set the FIFO address every time
+    uint8_t fifo_base[2] = { 0x00, 0x00 }; // TX base, RX base
+    if (HAL_SUBGHZ_ExecSetCmd(&hsubghz, RADIO_SET_BUFFERBASEADDRESS, fifo_base, 2) != HAL_OK)
         return false;
 
-    // RADIO_SET_TX = 0x83u
-    return HAL_SUBGHZ_WriteRegister(&hsubghz, 0x01, RADIO_SET_TX) == HAL_OK; // RH_RF95_MODE_TX | RH_RF95_LONG_RANGE_MODE
+    // write payload to FIFO starting at offset 0x00
+    if (HAL_SUBGHZ_WriteBuffer(&hsubghz, 0x00, (uint8_t*)data, len) != HAL_OK)
+        return false;
+
+    // trigger transmission
+    if (HAL_SUBGHZ_ExecSetCmd(&hsubghz, RADIO_SET_TX, NULL, 0) != HAL_OK)
+        return false;
+
+    return true;
 }
 
-bool lora_waitPacketSent(uint32_t timeout)
-{
-    uint32_t start = HAL_GetTick();
-    uint8_t irq_flags;
 
-    while ((HAL_GetTick() - start) < timeout)
+bool lora_waitPacketSent(uint32_t timeout_ms)
+{
+    uint8_t irq_status[2];
+    uint32_t start = HAL_GetTick();
+
+    while ((HAL_GetTick() - start) < timeout_ms)
     {
-        HAL_SUBGHZ_ReadRegister(&hsubghz, RADIO_GET_IRQSTATUS, &irq_flags); // RH_RF95_REG_12_IRQ_FLAGS
-        if (irq_flags & 0x08) // RH_RF95_TX_DONE
+        if (HAL_SUBGHZ_ExecGetCmd(&hsubghz, RADIO_GET_IRQSTATUS, irq_status, 2) == HAL_OK)
         {
-            HAL_SUBGHZ_WriteRegister(&hsubghz, RADIO_GET_IRQSTATUS, 0xFF); // Clear IRQs
-            return true;
+            if (irq_status[1] & 0x0001) // Bit 0 = TX_DONE
+            {
+                uint8_t clear_all[] = { 0xFF, 0xFF };
+                HAL_SUBGHZ_ExecSetCmd(&hsubghz, RADIO_CLR_IRQSTATUS, clear_all, 2);
+                return true;
+            }
         }
     }
     return false;
@@ -89,13 +96,15 @@ bool lora_waitPacketSent(uint32_t timeout)
 bool lora_waitAvailableTimeout(uint32_t timeout)
 {
     uint32_t start = HAL_GetTick();
-    uint8_t irq_flags;
+    uint8_t irqStatus[2];
 
     while ((HAL_GetTick() - start) < timeout)
     {
-        HAL_SUBGHZ_ReadRegister(&hsubghz, RADIO_GET_IRQSTATUS, &irq_flags); // RH_RF95_REG_12_IRQ_FLAGS
-        if (irq_flags & 0x40) // RH_RF95_RX_DONE
+        HAL_SUBGHZ_ExecGetCmd(&hsubghz, RADIO_GET_IRQSTATUS, irqStatus, 2);
+        if (irqStatus[1] & 0x0002) // RX_DONE is bit 2
+        {
             return true;
+        }
     }
     return false;
 }
@@ -109,7 +118,7 @@ bool lora_setFrequency(float center)
         (uint8_t)(frf)
     };
 
-    return HAL_SUBGHZ_ExecSetCmd(&hsubghz, RADIO_SET_RFFREQUENCY, frf_bytes, 4) == HAL_OK;
+    return HAL_SUBGHZ_ExecSetCmd(&hsubghz, RADIO_SET_RFFREQUENCY, frf_bytes, 3) == HAL_OK;
 }
 
 
@@ -137,7 +146,14 @@ bool lora_setTxPower(uint8_t power)
 
 bool lora_available()
 {
-    uint8_t irq_flags;
-    HAL_SUBGHZ_ReadRegister(&hsubghz, RADIO_GET_IRQSTATUS, &irq_flags); // RH_RF95_REG_12_IRQ_FLAGS
-    return (irq_flags & 0x40); // RH_RF95_RX_DONE
+    uint8_t irq_status[2];
+
+    // get the current IRQ flags (non-destructive)
+    if (HAL_SUBGHZ_ExecGetCmd(&hsubghz, RADIO_CLR_IRQSTATUS, irq_status, 2) != HAL_OK)
+        return false;
+
+    uint16_t irq = ((uint16_t)irq_status[0] << 8) | irq_status[1];
+
+    // RX_DONE is bit 1 = 0x0002
+    return (irq & 0x0002);
 }
