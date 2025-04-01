@@ -2,12 +2,15 @@
 #include "lora.h"
 
 SUBGHZ_HandleTypeDef hsubghz;
+uint8_t CR;
+uint8_t BW = 0x04; // 125
+uint8_t LDRO;
 
 bool lora_init()
 {
     // initialize SubGHz with correct prescaler
     // #define LL_SPI_BAUDRATEPRESCALER_DIV4      (SPI_CR1_BR_0)  /*!< BaudRate control equal to fPCLK/4   */
-    hsubghz.Init.BaudratePrescaler = SUBGHZSPI_BAUDRATEPRESCALER_8;
+    hsubghz.Init.BaudratePrescaler = SUBGHZSPI_BAUDRATEPRESCALER_8; // #define SPI_CR1_BR_1                (0x2UL << SPI_CR1_BR_Pos)                  /*!< 0x00000010 */ from the wle5
     if (HAL_SUBGHZ_Init(&hsubghz) != HAL_OK)
         return false;
 
@@ -81,6 +84,7 @@ bool lora_receive(uint8_t* data, uint8_t len)
     uint8_t packet_len = 0;
 
     // read the RX buffer status (get payload length)
+    // No more manually skipping the 4 headers that are at the beginning of the rxBuf
     status = HAL_SUBGHZ_ExecGetCmd(&hsubghz, RADIO_GET_RXBUFFERSTATUS, &packet_len, 1);
     if (status != HAL_OK || packet_len == 0 || packet_len > len)
     {
@@ -184,3 +188,20 @@ bool lora_available()
     return (irq & 0x0002);
 }
 
+
+bool lora_setSF(uint8_t sf)
+{
+    // i made this into boolean just in case
+    // we want sf between 7 and 12
+    if (sf < 7 || sf > 12) return false;
+
+    uint8_t modParams[4] = {
+        sf, // sf
+        BW,
+        CR,
+        LDRO,
+        // other things
+    };
+
+    return HAL_SUBGHZ_ExecSetCmd(&hsubghz, RADIO_SET_MODULATIONPARAMS, modParams, 4) == HAL_OK;
+}
