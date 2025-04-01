@@ -22,7 +22,7 @@ bool lora_init();
 bool lora_send(const uint8_t* data, uint8_t len);
 
 // Recieves a data packet of 'len' bytes over LoRa
-bool lora_recieve(uint8_t* data, uint8_t len);
+bool lora_receive(uint8_t* data, uint8_t len);
 
 // Waits for the packet to be fully sent, with timeout in milliseconds
 bool lora_waitPacketSent(uint32_t timeout);

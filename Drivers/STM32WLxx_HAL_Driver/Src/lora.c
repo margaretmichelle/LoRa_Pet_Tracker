@@ -2,9 +2,6 @@
 #include "lora.h"
 
 SUBGHZ_HandleTypeDef hsubghz;
-uint8_t CR;
-uint8_t BW = 0x04; // 125
-uint8_t LDRO;
 
 bool lora_init()
 {
@@ -179,8 +176,7 @@ bool lora_available()
     uint8_t irq_status[2];
 
     // get the current IRQ flags (non-destructive)
-    if (HAL_SUBGHZ_ExecGetCmd(&hsubghz, RADIO_CLR_IRQSTATUS, irq_status, 2) != HAL_OK)
-        return false;
+    if (HAL_SUBGHZ_ExecGetCmd(&hsubghz, RADIO_CLR_IRQSTATUS, irq_status, 2) != HAL_OK) return false;
 
     uint16_t irq = ((uint16_t)irq_status[0] << 8) | irq_status[1];
 
@@ -195,12 +191,12 @@ bool lora_setSF(uint8_t sf)
     // we want sf between 7 and 12
     if (sf < 7 || sf > 12) return false;
 
+    // Set_ModulationParams(Sf, Bw, Cr, Ldro) is used to configure the LoRa modulation parameters for the sub-GHz radio.
     uint8_t modParams[4] = {
         sf, // sf
-        BW,
-        CR,
-        LDRO,
-        // other things
+        0x04, // bw 0x04: bandwidth 125 (125 kHz)
+        0x0, // cr coding rate 0x0: no forward error correction coding rate 4/4 
+        0, // lr 0 low data rate optimization disabled, unsure if base station can set this
     };
 
     return HAL_SUBGHZ_ExecSetCmd(&hsubghz, RADIO_SET_MODULATIONPARAMS, modParams, 4) == HAL_OK;
