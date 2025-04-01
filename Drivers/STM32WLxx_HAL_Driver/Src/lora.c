@@ -72,6 +72,32 @@ bool lora_send(const uint8_t* data, uint8_t len)
     return true;
 }
 
+bool lora_receive(uint8_t* data, uint8_t len)
+{
+
+    if (!lora_available()) return false;
+
+    HAL_StatusTypeDef status;
+    uint8_t packet_len = 0;
+
+    // read the RX buffer status (get payload length)
+    status = HAL_SUBGHZ_ExecGetCmd(&hsubghz, RADIO_GET_RXBUFFERSTATUS, &packet_len, 1);
+    if (status != HAL_OK || packet_len == 0 || packet_len > len)
+    {
+        return false;
+    }
+
+    // read the actual data from the radio RX buffer
+    // this does the buffer thingy
+    status = HAL_SUBGHZ_ReadBuffer(&hsubghz, 0x00, data, packet_len);
+    if (status != HAL_OK)
+    {
+        return false;
+    }
+
+    return true;
+}
+
 
 bool lora_waitPacketSent(uint32_t timeout_ms)
 {
@@ -157,3 +183,4 @@ bool lora_available()
     // RX_DONE is bit 1 = 0x0002
     return (irq & 0x0002);
 }
+
