@@ -27,21 +27,14 @@ bool lora_init()
     bool setPower = lora_setTxPower(13);
     if (!setPower || !setFreq) return false;
 
-    // set modulation parameters (SF7, BW 125 kHz, CR 4/5)
-    uint8_t modParams[4] = {
-        0x07, // SF7
-        0x04, // BW 125 kHz
-        0x01, // CR 4/5
-        0x00  // Low Data Rate Optimization off
-    };
-    if (HAL_SUBGHZ_ExecSetCmd(&hsubghz, RADIO_SET_MODULATIONPARAMS, modParams, 4) != HAL_OK)
-        return false;
+    // set modulation parameters (SF7, BW 125 kHz, CR 4/4)
+    if (!lora_setSF(0x09)) return false;
 
     // set packet parameters (preamble = 8, header = explicit, CRC on, IQ standard)
     uint8_t pktParams[9] = {
         0x00, 0x08, // Preamble length = 8
         0x00,       // Explicit header
-        0x10,       // Payload length = 16 bytes (adjust as needed)
+        0x10,       // Payload length = 16 bytes
         0x01,       // CRC on
         0x00        // Standard IQ
     };
