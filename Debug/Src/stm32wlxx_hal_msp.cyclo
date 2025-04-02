@@ -12,7 +12,7 @@
 ../Src/stm32wlxx_hal_msp.c:61:6:HAL_MspDeInit	1
 ../Src/stm32wlxx_hal_msp.c:72:6:HAL_PPP_MspInit	1
 ../Src/stm32wlxx_hal_msp.c:83:6:HAL_PPP_MspDeInit	1
-../Src/stm32wlxx_hal_msp.c:106:6:HAL_UART_MspInit	3
+../Src/stm32wlxx_hal_msp.c:106:6:HAL_UART_MspInit	2
 ../Src/stm32wlxx_hal_msp.c:162:6:HAL_UART_MspDeInit	2
 ../Src/stm32wlxx_hal_msp.c:192:6:HAL_I2C_MspInit	3
 ../Src/stm32wlxx_hal_msp.c:241:6:HAL_I2C_MspDeInit	2
