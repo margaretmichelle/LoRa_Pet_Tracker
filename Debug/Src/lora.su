@@ -1,0 +1,9 @@
+../Src/lora.c:6:6:lora_init	32	static
+../Src/lora.c:56:6:lora_send	24	static
+../Src/lora.c:75:6:lora_receive	24	static
+../Src/lora.c:103:6:lora_waitPacketSent	32	static
+../Src/lora.c:123:6:lora_waitAvailableTimeout	24	static
+../Src/lora.c:139:6:lora_setFrequency	24	static
+../Src/lora.c:152:6:lora_setTxPower	24	static
+../Src/lora.c:174:6:lora_available	16	static
+../Src/lora.c:188:6:lora_setSF	24	static

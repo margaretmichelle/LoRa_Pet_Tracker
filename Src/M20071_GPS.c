@@ -1,6 +1,4 @@
 #include "m20071_gps.h"
-#include <string.h>
-#include <stdio.h>
 
 void M20071_GPS_Init(M20071_GPS_HandleTypeDef *gps, UART_HandleTypeDef *huart) {
     gps->huart = huart;
@@ -25,8 +23,15 @@ HAL_StatusTypeDef M20071_GPS_SendCommand(M20071_GPS_HandleTypeDef *gps, const ch
     memset(gps->txBuffer, 0, GPS_UART_BUFFER_SIZE);
     strncpy((char *)gps->txBuffer, cmd, len);
 
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET); // RTS low
+    HAL_Delay(20);  // 20ms delay, madatory delay, see logbook
+
     // Send the command using UART polling
-    return HAL_UART_Transmit(gps->huart, gps->txBuffer, len, GPS_CMD_TIMEOUT);
+    HAL_StatusTypeDef transmit_result;
+    transmit_result = HAL_UART_Transmit(gps->huart, gps->txBuffer, len, GPS_CMD_TIMEOUT);
+
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET); // RTS high
+    return transmit_result;
 }
 
 /**
@@ -34,7 +39,7 @@ HAL_StatusTypeDef M20071_GPS_SendCommand(M20071_GPS_HandleTypeDef *gps, const ch
  * @param msg: Pointer to the message
  */
 void addChecksum(char *msg) {
-  const char *star = strchr(msg, '*');
+  char *star = strchr(msg, '*');
 
   uint8_t calculatedChecksum = 0;
   // Compute XOR of all characters between $ and *
@@ -137,13 +142,28 @@ bool setPeriodicMode(M20071_GPS_HandleTypeDef *gps, uint8_t mode, uint8_t firstR
 /**
  * @brief Open a GNSS data port
  * @param gps: Pointer to the GPS handle
+ * @return True if command was sent successfully, false otherwise
+ */
+bool GPS_enterRTC(M20071_GPS_HandleTypeDef *gps) {
+  char cmd[40] = "$PAIR650,0*";
+  addChecksum(cmd);
+
+  if (M20071_GPS_SendCommand(gps, cmd) == HAL_OK) {
+      return true;
+  }
+  return false;
+}
+
+/**
+ * @brief Open a GNSS data port
+ * @param gps: Pointer to the GPS handle
  * @param portIndex: HW port index
  * @param baudRate: Baud rate
  * @return True if command was sent successfully, false otherwise
  */
-bool openIOPort(M20071_GPS_HandleTypeDef *gps, uint8_t portIndex, uint8_t baudRate) {
+bool openIOPort(M20071_GPS_HandleTypeDef *gps, uint8_t portIndex) {
   char cmd[40];
-  sprintf(cmd, "$PAIR860,0,%d,%d,%d,0*", portIndex, GNSS_IO_FLAG_OUT_NMEA | GNSS_IO_FLAG_OUT_CMD_RSP | GNSS_IO_FLAG_OUT_DATA_RSP | GNSS_IO_FLAG_IN_CMD, baudRate);
+  sprintf(cmd, "$PAIR860,0,%d,%d,9600,0*", portIndex, GNSS_IO_FLAG_OUT_NMEA | GNSS_IO_FLAG_OUT_CMD_RSP | GNSS_IO_FLAG_OUT_DATA_RSP | GNSS_IO_FLAG_IN_CMD);
   addChecksum(cmd);
 
   if (M20071_GPS_SendCommand(gps, cmd) == HAL_OK) {
@@ -240,7 +260,8 @@ bool validateChecksum(const uint8_t *msg) {
   }
 
   // Extract the checksum from the sentence
-  uint8_t receivedChecksum = (uint8_t)strtol((char *)(star + 1), NULL, 16);
+  uint8_t receivedChecksum;
+  sscanf((char *)(star + 1), "%2hhx", &receivedChecksum);
 
   return (calculatedChecksum == receivedChecksum);
 }
@@ -248,24 +269,27 @@ bool validateChecksum(const uint8_t *msg) {
 /**
  * @brief Determines which parsing function to use for message (NMEA or PAIR)
  * @param gps: Pointer to the GPS handle
+ * @return 1 if successfully parsed NMEA, 2 if PAIR, 0 if it fails
  */
-void M20071_GPS_Parse(M20071_GPS_HandleTypeDef *gps) {
-  char *p = gps->rxBuffer + 1;  // Move to first character after $
+int GPS_Parse(M20071_GPS_HandleTypeDef *gps) {
+  char *p = (char *)(gps->rxBuffer + 1);  // Move to first character after '$'
 
   // Check for PAIR
   if (p[0] == 'P' && p[1] == 'A' && p[2] == 'I' && p[3] == 'R') {
-      // return 1;
+      return 2;
+      // I don't think I care about the PAIR responses
   }
 
   // Check for RMC (any talker ID: $xxRMC)
-  p = gps->rxBuffer + 3;
+  p = (char *)(gps->rxBuffer + 3);
   if (p[0] == 'R' && p[1] == 'M' && p[2] == 'C') {
-    p = gps->rxBuffer;
-    M20071_GPS_ParseNMEA(char *p);
+    p = (char *)gps->rxBuffer;
+    return GPS_ParseNMEA(p, gps);
   }
 
-  return 0; // Unknown message
+  return 0; // something wrong
 }
+
 
 
 /* The following code is modified from https://github.com/adafruit/Adafruit_GPS/blob/master/src/NMEA_parse.cpp */
@@ -275,31 +299,34 @@ void M20071_GPS_Parse(M20071_GPS_HandleTypeDef *gps) {
  * @param msg: Pointer to the message starting after SentenceID
  * @return True if successfully parsed, false if it fails check or parsing
  */
-bool M20071_GPS_ParseNMEA(char *nmea) {
+bool GPS_ParseNMEA(char *nmea, M20071_GPS_HandleTypeDef *gps) {
 
   char *p = nmea; // Pointer to move through sentence
   p = strchr(p, ',') + 1; // Skip to char after the next comma
 
-  parseTime(p);
+  if (!parseTime(p, &gps->data)) return false;
   p = strchr(p, ',') + 1;
-  parseFix(p);
+  if (!parseFix(p, &gps->data)) return false;
   p = strchr(p, ',') + 1;
   // parse out both latitude and direction, then go to next field, or fail
-  parseLatLon(p, true);
+  if (!parseLatLon(p, true, &gps->data)) return false;
   p = strchr(p, ',') + 1;
   // parse out both longitude and direction, then go to next field, or fail
-  parseLatLon(p, false);
+  if (!parseLatLon(p, false, &gps->data)) return false;
   p = strchr(p, ',') + 1;
   // speed over ground
   p = strchr(p, ',') + 1;
   // course over ground
   p = strchr(p, ',') + 1;
   if (!isEmpty(p)) {
-    uint32_t fulldate = atof(p);
-    day = fulldate / 10000;
-    month = (fulldate % 10000) / 100;
-    year = (fulldate % 100);
+	uint32_t fulldate = strtoul(p, NULL, 10);
+    gps->data.day = fulldate / 10000;
+    gps->data.month = (fulldate % 10000) / 100;
+    gps->data.year = (fulldate % 100);
+
+    return true;
   }
+  return false;
 }
 
 /**************************************************************************/
@@ -323,18 +350,12 @@ bool isEmpty(char *pStart) {
     @return true if successful, false otherwise
 */
 /**************************************************************************/
-bool parseTime(char *p) {
+bool parseTime(char *p, M20071_GPS_Data *data) {
   if (!isEmpty(p)) {
     uint32_t time = atol(p);
-    hour = time / 10000;
-    minute = (time % 10000) / 100;
-    seconds = (time % 100);
-    char *dec = strchr(p, '.');
-    char *comstar = min(strchr(p, ','), strchr(p, '*'));
-    if (dec != NULL && comstar != NULL && dec < comstar)
-      milliseconds = atof(dec) * 1000;
-    else
-      milliseconds = 0;
+    data->hour = time / 10000;
+    data->minute = (time % 10000) / 100;
+    data->second = (time % 100);
     return true;
   }
   return false;
@@ -347,14 +368,15 @@ bool parseTime(char *p) {
     @return True if we parsed it, false if it has invalid data
 */
 /**************************************************************************/
-bool parseFix(char *p) {
+bool parseFix(char *p, M20071_GPS_Data *data) {
   if (!isEmpty(p)) {
     if (p[0] == 'A') {
-      fix = true;
+      data->fix = true;
       return true;
-    } else if (p[0] == 'V')
-      fix = false;
+    } else if (p[0] == 'V') {
+      data->fix = false;
       return true;
+    }
   }
   return false;
 }
@@ -367,7 +389,7 @@ bool parseFix(char *p) {
     @return True if we parsed it, false if it has invalid data
 */
 /**************************************************************************/
-bool parseLatLon(char *p, bool latFlag) {
+bool parseLatLon(char *p, bool latFlag, M20071_GPS_Data *data) {
   if (!isEmpty(p)) {
     char *e = strchr(p, ',');
     if (e == NULL || e - p > 8) {
@@ -380,15 +402,35 @@ bool parseLatLon(char *p, bool latFlag) {
     p = e + 1;
 
     if (latFlag) {  // if parsing latitude
-      latitudeDegrees = atof(coordValue);
-      lat = (p[0] == 'S') ? 1 : 0;  // 1 if S, 0 if N
+      data->latitudeDegrees = atof(coordValue);
+      data->lat = (p[0] == 'S') ? 1 : 0;  // 1 if S, 0 if N
     }
     else {  // if parsing longitude
-      longitudeDegrees = atof(coordValue);
-      lon = (p[0] == 'W') ? 1 : 0;  // 1 if W, 0 if E
+      data->longitudeDegrees = atof(coordValue);
+      data->lon = (p[0] == 'W') ? 1 : 0;  // 1 if W, 0 if E
     }
 
     return true;
   }
   return false;
+}
+
+void GPS_FormatData(uint8_t dataGPS[], M20071_GPS_HandleTypeDef *gps) {
+  dataGPS[0] = 20;
+	dataGPS[1] = gps->data.year;
+	dataGPS[2] = gps->data.month;
+	dataGPS[3] = gps->data.day;
+	dataGPS[4] = gps->data.hour;
+	dataGPS[5] = gps->data.minute;
+	dataGPS[6] = gps->data.second;
+	dataGPS[7] = ((int)gps->data.latitudeDegrees << 1) | gps->data.lat;
+	uint32_t latDD = (int) (gps->data.latitudeDegrees * 1000000) % 1000000;  // fractional degrees (up to 20 bits), 6 digits
+	dataGPS[8] = (latDD >> 16) & 0xFF;
+	dataGPS[9] = (latDD >> 8) & 0xFF;
+	dataGPS[10] = latDD & 0xFF;
+	dataGPS[11] = ((int)gps->data.longitudeDegrees << 1) | gps->data.lon;
+	uint32_t lonDD = (int) (gps->data.longitudeDegrees * 1000000) % 1000000;  // fractional degrees (up to 20 bits), 6 digits
+	dataGPS[12] = (lonDD >> 16) & 0xFF;
+	dataGPS[13] = (lonDD >> 8) & 0xFF;
+	dataGPS[14] = lonDD & 0xFF;
 }

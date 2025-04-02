@@ -1,8 +1,13 @@
 #ifndef M20071_GPS_H
 #define M20071_GPS_H
 
-#include "stm32wlxx_hal.h"
+#include <stm32wlxx_hal.h>
+#include <stm32wlxx_hal_uart.h>
 #include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #ifndef _NMEA_DATA_H
 #define _NMEA_DATA_H
@@ -19,9 +24,27 @@ typedef NMEA_FLOAT_T nmea_float_t;
 #define GPS_CMD_TIMEOUT      2000   // UART polling timeout in ms
 
 typedef struct {
+    nmea_float_t latitudeDegrees;  ///< Latitude in decimal degrees
+    nmea_float_t longitudeDegrees; ///< Longitude in decimal degrees
+    uint8_t lat;   // 0 = North, 1 = South
+    uint8_t lon;   // 0 = East, 1 = West
+
+    uint8_t hour;
+    uint8_t minute;
+    uint8_t second;
+
+    uint8_t year;          ///< GMT year
+    uint8_t month;         ///< GMT month
+    uint8_t day;           ///< GMT day
+
+    bool fix;
+} M20071_GPS_Data;
+
+typedef struct {
     UART_HandleTypeDef *huart;        // UART handle
     uint8_t txBuffer[GPS_UART_BUFFER_SIZE];   // Buffer for outgoing commands
     uint8_t rxBuffer[GPS_UART_BUFFER_SIZE];   // Buffer for incoming GPS responses
+    M20071_GPS_Data data;
 } M20071_GPS_HandleTypeDef;
 
 void M20071_GPS_Init(M20071_GPS_HandleTypeDef *gps, UART_HandleTypeDef *huart);
@@ -33,37 +56,23 @@ bool GPS_powerOff(M20071_GPS_HandleTypeDef *gps);
 bool GPS_systemReboot(M20071_GPS_HandleTypeDef *gps);
 bool GPS_setNMEARate(M20071_GPS_HandleTypeDef *gps, uint8_t type, uint8_t rate);
 bool GPS_setPeriodicMode(M20071_GPS_HandleTypeDef *gps, uint8_t mode, uint8_t firstRun, uint8_t firstSleep, uint8_t secondRun, uint8_t secondSleep);
-bool GPS_openIOPort(M20071_GPS_HandleTypeDef *gps, uint8_t portIndex, uint8_t baudRate);
+bool GPS_enterRTC(M20071_GPS_HandleTypeDef *gps);
+bool GPS_openIOPort(M20071_GPS_HandleTypeDef *gps, uint8_t portIndex);
 bool GPS_closeIOPort(M20071_GPS_HandleTypeDef *gps, uint8_t portIndex);
 bool GPS_testIOPort(M20071_GPS_HandleTypeDef *gps);
 
-void M20071_GPS_Parse(M20071_GPS_HandleTypeDef *gps);
-void M20071_GPS_ParseNMEA(M20071_GPS_HandleTypeDef *gps);
+int GPS_Parse(M20071_GPS_HandleTypeDef *gps);
+bool GPS_ParseNMEA(char *nmea, M20071_GPS_HandleTypeDef *gps);
 
-private {
-    void addChecksum(char *msg);
-    bool validateChecksum(const uint8_t *msg);
+void GPS_FormatData(uint8_t dataGPS[], M20071_GPS_HandleTypeDef *gps);
 
-    bool isEmpty(char *pStart);
-    bool parseTime(char *p);
-    bool parseFix(char *p);
-    bool parseLatLon(char *p, bool latFlag);
-}
+void addChecksum(char *msg);
+bool validateChecksum(const uint8_t *msg);
 
-
-uint8_t hour;          ///< GMT hours
-uint8_t minute;        ///< GMT minutes
-uint8_t seconds;       ///< GMT seconds
-uint16_t milliseconds; ///< GMT milliseconds
-uint8_t year;          ///< GMT year
-uint8_t month;         ///< GMT month
-uint8_t day;           ///< GMT day
-
-nmea_float_t latitudeDegrees;  ///< Latitude in decimal degrees
-nmea_float_t longitudeDegrees; ///< Longitude in decimal degrees
-bool lat = 0;    ///< N(0)/S(1)
-bool lon = 0;    ///< E(0)/W(1)
-bool fix;          ///< Have a fix?
+bool isEmpty(char *pStart);
+bool parseTime(char *p, M20071_GPS_Data *data);
+bool parseFix(char *p, M20071_GPS_Data *data);
+bool parseLatLon(char *p, bool latFlag, M20071_GPS_Data *data);
 
 // Output Flags
 #define GNSS_IO_FLAG_OUT_NMEA        (0x01)  // Output NMEA sentences (GPS data)

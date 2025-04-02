@@ -124,18 +124,27 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     /* Peripheral clock enable */
     __HAL_RCC_USART1_CLK_ENABLE();
 
-    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
     /**USART1 GPIO Configuration
     PB7     ------> USART1_RX
     PB6     ------> USART1_TX
     PB3     ------> USART1_RTS
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_7|GPIO_PIN_6|GPIO_PIN_3;
+    /** Configure PB7 as USART1_RX, PB6 as USART1_TX */
+    GPIO_InitStruct.Pin = GPIO_PIN_7 | GPIO_PIN_6;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_PULLUP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    /** Configure PB3 as a General-Purpose Output (Manual RTS Control) */
+    GPIO_InitStruct.Pin = GPIO_PIN_3;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;  // Set as output
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
 
   /* USER CODE BEGIN USART1_MspInit 1 */
 
@@ -165,7 +174,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
     PB6     ------> USART1_TX
     PB3     ------> USART1_RTS
     */
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_7|GPIO_PIN_6|GPIO_PIN_3);
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_7|GPIO_PIN_6|GPIO_PIN_3);
 
   /* USER CODE BEGIN USART1_MspDeInit 1 */
 
