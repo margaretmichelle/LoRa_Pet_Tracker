@@ -20,6 +20,14 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32wlxx_hal.h"
+#include "stm32wlxx_hal_gpio.h"
+#include "stm32wlxx_hal_uart.h"
+#include "stm32wlxx_hal_i2c.h"
+#include "stm32wlxx_hal_subghz.h"
+#include "stm32wlxx_hal_rcc.h"
+#include "stm32wlxx_ll_rcc.h"
+#include "stm32wlxx_ll_gpio.h"
+#include "stm32wlxx_ll_system.h"
 
 /** @addtogroup STM32WLxx_HAL_Driver
   * @{

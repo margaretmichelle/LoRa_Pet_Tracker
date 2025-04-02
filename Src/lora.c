@@ -149,7 +149,7 @@ bool lora_setTxPower(uint8_t power)
     // We dont need to manually set rfo on stm32
 
     uint8_t rampTime = 0x04; // default ramp time: 20us (safe default)
-    
+
     if (power > 22) // max output power is 22dBm according to datasheet
         power = 22;
 
@@ -188,7 +188,7 @@ bool lora_setSF(uint8_t sf)
     uint8_t modParams[4] = {
         sf, // sf
         0x04, // bw 0x04: bandwidth 125 (125 kHz)
-        0x0, // cr coding rate 0x0: no forward error correction coding rate 4/4 
+        0x0, // cr coding rate 0x0: no forward error correction coding rate 4/4
         0, // lr 0 low data rate optimization disabled, unsure if base station can set this
     };
 

@@ -186,12 +186,13 @@ g_pfnVectors:
   .word	EXTI15_10_IRQHandler                   			/* EXTI line 15_10] interrupt through EXTI                                   */
   .word	RTC_ALARM_IRQHandler                   			/* RTC alarms A and B interrupt                                              */
   .word	LPTIM3_IRQHandler                      			/* LPtimer 3 global interrupt                                                */
-  .word	0                                      			/* Reserved                                                                  */
-  .word	0                                      			/* Reserved                                                                  */
-  .word	0                                      			/* Reserved                                                                  */
-  .word	HSEM_IRQHandler                        			/* Semaphore interrupt 0 to CPU                                              */
-  .word	I2C3_EV_IRQHandler                     			/* I2C3 event interrupt                                                      */
-  .word	I2C3_ER_IRQHandler                     			/* I2C3 error interrupt                                                      */
+  .word	SUBGHZSPI_IRQHandler                 			/* SUBGHZSPI global interrupt                         */
+  .word	0                                    			/* Reserved                                           */
+  .word	0                                    			/* Reserved                                           */
+  .word	HSEM_IRQHandler                      			/* Semaphore interrupt 0 to CPU1                      */
+  .word	I2C3_EV_IRQHandler                   			/* I2C3 event interrupt                               */
+  .word	I2C3_ER_IRQHandler                   			/* I2C3 error interrupt                               */
+  .word	SUBGHZ_Radio_IRQHandler              			/* Radio IRQs RFBUSY interrupt through EXTI           */
   .word	Radio_IRQ_Busy_IRQHandler              			/* Radio IRQs, RFBUSY interrupt through EXTI                                 */
   .word	AES_IRQHandler                         			/* AES global interrupt                                                      */
   .word	True_RNG_IRQHandler                    			/* True random number generator interrupt                                    */
@@ -370,6 +371,9 @@ g_pfnVectors:
 	.weak	LPTIM3_IRQHandler
 	.thumb_set LPTIM3_IRQHandler,Default_Handler
 
+	.weak	SUBGHZSPI_IRQHandler
+	.thumb_set SUBGHZSPI_IRQHandler,Default_Handler
+
 	.weak	HSEM_IRQHandler
 	.thumb_set HSEM_IRQHandler,Default_Handler
 
@@ -378,6 +382,9 @@ g_pfnVectors:
 
 	.weak	I2C3_ER_IRQHandler
 	.thumb_set I2C3_ER_IRQHandler,Default_Handler
+
+	.weak	SUBGHZ_Radio_IRQHandler
+	.thumb_set SUBGHZ_Radio_IRQHandler,Default_Handler
 
 	.weak	Radio_IRQ_Busy_IRQHandler
 	.thumb_set Radio_IRQ_Busy_IRQHandler,Default_Handler

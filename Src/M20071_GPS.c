@@ -1,4 +1,4 @@
-#include "m20071_gps.h"
+#include "M20071_GPS.h"
 
 void M20071_GPS_Init(M20071_GPS_HandleTypeDef *gps, UART_HandleTypeDef *huart) {
     gps->huart = huart;
@@ -55,7 +55,7 @@ void addChecksum(char *msg) {
  * @param gps: Pointer to the GPS handle
  * @return True if command was sent successfully, false otherwise
  */
-bool powerOn(M20071_GPS_HandleTypeDef *gps) {
+bool GPS_powerOn(M20071_GPS_HandleTypeDef *gps) {
   char cmd[40] = "$PAIR002*";
   addChecksum(cmd);
 
@@ -70,7 +70,7 @@ bool powerOn(M20071_GPS_HandleTypeDef *gps) {
  * @param gps: Pointer to the GPS handle
  * @return True if command was sent successfully, false otherwise
  */
-bool powerOff(M20071_GPS_HandleTypeDef *gps) {
+bool GPS_powerOff(M20071_GPS_HandleTypeDef *gps) {
   char cmd[40] = "$PAIR003*";
   addChecksum(cmd);
 
@@ -85,7 +85,7 @@ bool powerOff(M20071_GPS_HandleTypeDef *gps) {
  * @param gps: Pointer to the GPS handle
  * @return True if command was sent successfully, false otherwise
  */
-bool systemReboot(M20071_GPS_HandleTypeDef *gps) {
+bool GPS_systemReboot(M20071_GPS_HandleTypeDef *gps) {
   char cmd[40] = "$PAIR023*";
   addChecksum(cmd);
 
@@ -102,7 +102,7 @@ bool systemReboot(M20071_GPS_HandleTypeDef *gps) {
  * @param rate: Output rate, range: 0-20 (how many times every position fix)
  * @return True if command was sent successfully, false otherwise
  */
-bool setNMEARate(M20071_GPS_HandleTypeDef *gps, uint8_t type, uint8_t rate) {
+bool GPS_setNMEARate(M20071_GPS_HandleTypeDef *gps, uint8_t type, uint8_t rate) {
   char cmd[40]; 
   sprintf(cmd, "$PAIR062,%d,%d*", type, rate);
   addChecksum(cmd);
@@ -123,7 +123,7 @@ bool setNMEARate(M20071_GPS_HandleTypeDef *gps, uint8_t type, uint8_t rate) {
  * @param secondSleep: Duration in seconds to sleep when there is no signal
  * @return True if command was sent successfully, false otherwise
  */
-bool setPeriodicMode(M20071_GPS_HandleTypeDef *gps, uint8_t mode, uint8_t firstRun, uint8_t firstSleep, uint8_t secondRun, uint8_t secondSleep) {
+bool GPS_setPeriodicMode(M20071_GPS_HandleTypeDef *gps, uint8_t mode, uint8_t firstRun, uint8_t firstSleep, uint8_t secondRun, uint8_t secondSleep) {
   char cmd[40];
   if (mode == 0) {
     strcpy(cmd, "$PAIR690,0*");
@@ -161,7 +161,7 @@ bool GPS_enterRTC(M20071_GPS_HandleTypeDef *gps) {
  * @param baudRate: Baud rate
  * @return True if command was sent successfully, false otherwise
  */
-bool openIOPort(M20071_GPS_HandleTypeDef *gps, uint8_t portIndex) {
+bool GPS_openIOPort(M20071_GPS_HandleTypeDef *gps, uint8_t portIndex) {
   char cmd[40];
   sprintf(cmd, "$PAIR860,0,%d,%d,9600,0*", portIndex, GNSS_IO_FLAG_OUT_NMEA | GNSS_IO_FLAG_OUT_CMD_RSP | GNSS_IO_FLAG_OUT_DATA_RSP | GNSS_IO_FLAG_IN_CMD);
   addChecksum(cmd);
@@ -178,7 +178,7 @@ bool openIOPort(M20071_GPS_HandleTypeDef *gps, uint8_t portIndex) {
  * @param portIndex: HW port index
  * @return True if command was sent successfully, false otherwise
  */
-bool closeIOPort(M20071_GPS_HandleTypeDef *gps, uint8_t portIndex) {
+bool GPS_closeIOPort(M20071_GPS_HandleTypeDef *gps, uint8_t portIndex) {
   char cmd[40];
   sprintf(cmd, "$PAIR861,0,%d*", portIndex);
   addChecksum(cmd);
@@ -194,7 +194,7 @@ bool closeIOPort(M20071_GPS_HandleTypeDef *gps, uint8_t portIndex) {
  * @param gps: Pointer to the GPS handle
  * @return True if command was sent successfully, false otherwise
  */
-bool testIOPort(M20071_GPS_HandleTypeDef *gps) {
+bool GPS_testIOPort(M20071_GPS_HandleTypeDef *gps) {
   char cmd[40] = "$PAIR870*";
   addChecksum(cmd);
 

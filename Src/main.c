@@ -16,17 +16,17 @@
  ******************************************************************************
  */
 
-#include <stm32wlxx_hal.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <time.h>
-#include <string.h>
-#include <stdio.h>
-#include <M20071_GPS.h>
-#include <lora.h>
-#include <lsm6dsox_reg.h>
-#include <stm32wlxx_hal_i2c.h>
+#include "M20071_GPS.h"
+#include "stm32wlxx_hal.h"
 
+#include "stdlib.h"
+#include "stdint.h"
+#include "time.h"
+#include "string.h"
+#include "stdio.h"
+#include "lora.h"
+#include "lsm6dsox_reg.h"
+#include "stm32wlxx_hal_i2c.h"
 
 
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
@@ -376,16 +376,16 @@ static void lsm6dsox_delay(uint32_t ms)
  {
    RCC_OscInitTypeDef RCC_OscInitStruct = {0};
    RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
- 
+
    /** Configure LSE Drive Capability
    */
    HAL_PWR_EnableBkUpAccess();
    __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
- 
+
    /** Configure the main internal regulator output voltage
    */
    __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
- 
+
    /** Initializes the CPU, AHB and APB buses clocks
    */
    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSE|RCC_OSCILLATORTYPE_MSI;

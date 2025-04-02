@@ -84,7 +84,7 @@ main-build: LoRa_Pet_Tracker.elf secondary-outputs
 
 # Tool invocations
 LoRa_Pet_Tracker.elf LoRa_Pet_Tracker.map: $(OBJS) $(USER_OBJS) C:\Users\marga\OneDrive\Documents\UBC\ 24.25\Capstone\LoRa_Pet_Tracker_V2\LoRa_Pet_Tracker\STM32WLE5JCIX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-g++ -o "LoRa_Pet_Tracker.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\marga\OneDrive\Documents\UBC 24.25\Capstone\LoRa_Pet_Tracker_V2\LoRa_Pet_Tracker\STM32WLE5JCIX_FLASH.ld" --specs=nosys.specs -Wl,-Map="LoRa_Pet_Tracker.map" -Wl,--gc-sections -static -L"C:\Users\marga\OneDrive\Documents\UBC 24.25\Capstone\LoRa_Pet_Tracker_V2\LoRa_Pet_Tracker\Drivers\STM32WLxx_HAL_Driver\Src" --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+	arm-none-eabi-g++ -o "LoRa_Pet_Tracker.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\marga\OneDrive\Documents\UBC 24.25\Capstone\LoRa_Pet_Tracker_V2\LoRa_Pet_Tracker\STM32WLE5JCIX_FLASH.ld" --specs=nosys.specs -Wl,-Map="LoRa_Pet_Tracker.map" -Wl,--gc-sections -static -lm -lnosys -lc --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
