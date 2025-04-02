@@ -21,10 +21,10 @@ bool lora_init()
     if (HAL_SUBGHZ_ExecSetCmd(&hsubghz, RADIO_SET_PACKETTYPE, &packetType, 1) != HAL_OK)
         return false;
 
-    // set frequency to  434.0 MHz and set TX Power to 13 dBm
-    float freq = 434.0;
+    // set frequency to  921.2 MHz and set TX Power to 14 dBm since thats what the node code does
+    float freq = 921.2;
     bool setFreq = lora_setFrequency(freq);
-    bool setPower = lora_setTxPower(13);
+    bool setPower = lora_setTxPower(14);
     if (!setPower || !setFreq) return false;
 
     // set modulation parameters (SF7, BW 125 kHz, CR 4/4)
