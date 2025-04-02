@@ -3,6 +3,8 @@
 
 #include <stm32wlxx_hal.h>
 #include <stm32wlxx_hal_uart.h>
+#include <stm32wlxx_hal_gpio.h>
+#include <stm32wlxx_hal_rcc.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
