@@ -1,4 +1,4 @@
-Src/main.o: ../Src/main.c \
+Src/M20071_GPS.o: ../Src/M20071_GPS.c ../Inc/m20071_gps.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h \
  ../Inc/stm32wlxx_hal_conf.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma.h \
@@ -35,11 +35,8 @@ Src/main.o: ../Src/main.c \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_spi.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h \
- ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h \
- ../Inc/M20071_GPS.h ../Inc/lora.h \
- ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_def.h \
- ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_spi.h \
- ../Inc/lsm6dsox_reg.h
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h
+../Inc/m20071_gps.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h:
 ../Inc/stm32wlxx_hal_conf.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma.h:
@@ -77,8 +74,3 @@ Src/main.o: ../Src/main.c \
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h:
-../Inc/M20071_GPS.h:
-../Inc/lora.h:
-../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_def.h:
-../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_spi.h:
-../Inc/lsm6dsox_reg.h:
