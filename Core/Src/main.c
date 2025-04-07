@@ -102,10 +102,10 @@ int main(void)
   MX_GPIO_Init();
 
   // LoRa setup
-  lora_init();
-  lora_setFrequency(902.5);
-  lora_setTxPower(17); // 14-22
-  lora_setSF(9);
+   lora_init();
+   lora_setFrequency(902.5);
+   lora_setTxPower(17); // 14-22
+   lora_setSF(9);
 
   // GPS setup
   HAL_UART_MspInit(&huart1);
@@ -114,13 +114,13 @@ int main(void)
   setGPS(&hGps);
 
   // IMU setup
-  HAL_I2C_MspInit(&hi2c3);
-  stmdev_ctx_t dev_ctx;
-  lsm6dsox_activity_init(dev_ctx);
+   HAL_I2C_MspInit(&hi2c3);
+   stmdev_ctx_t dev_ctx;
+   lsm6dsox_activity_init(dev_ctx);
 
   // General setup
   time_t timer;
-  timer = time(NULL);
+  timer = HAL_GetTick();
 
   bool sleep = false;
 
@@ -135,6 +135,8 @@ int main(void)
   // NOTE: You can in turn use HAL_GPIO_TogglePin
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, pin_state);
   // synchronous delay for 500 ms
+//  lsm6dsox_device_id_get(&dev_ctx, &dummy);
+
   HAL_Delay(500);
   }
 
@@ -273,8 +275,8 @@ static void lsm6dsox_activity_init(stmdev_ctx_t dev_ctx)
  /* Check device ID */
  lsm6dsox_device_id_get(&dev_ctx, &dummy);
 
- if (dummy != LSM6DSOX_ID)
-   while (1);
+// if (dummy != LSM6DSOX_ID)
+//   while (1);
 
 // /* Restore default configuration */
 // lsm6dsox_reset_set(&dev_ctx, PROPERTY_ENABLE);
@@ -337,10 +339,10 @@ static bool lsm6dsox_get_event(void *handle, stmdev_ctx_t dev_ctx) {
 */
 static int32_t lsm6dsox_write(void *handle, uint8_t reg, const uint8_t *bufp, uint16_t len)
 {
- HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+ HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
  HAL_I2C_Master_Transmit(handle, LSM6DSOX_I2C_ADD_L, &reg, 1, 1000);
  HAL_I2C_Master_Transmit(handle, LSM6DSOX_I2C_ADD_L, (uint8_t*) bufp, len, 1000);
- HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+ HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
  return 0;
 }
 
@@ -357,10 +359,10 @@ static int32_t lsm6dsox_write(void *handle, uint8_t reg, const uint8_t *bufp, ui
 static int32_t lsm6dsox_read(void *handle, uint8_t reg, uint8_t *bufp, uint16_t len)
 {
  reg |= 0x80;
- HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+ HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
  HAL_I2C_Master_Transmit(handle, LSM6DSOX_I2C_ADD_L, &reg, 1, 1000);
  HAL_I2C_Master_Receive(handle, LSM6DSOX_I2C_ADD_L, bufp, len, 1000);
- HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+ HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
  return 0;
 }
 

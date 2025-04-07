@@ -11,7 +11,9 @@
 ../Core/Src/stm32wlxx_hal_msp.c:73:6:HAL_MspInit	1
 ../Core/Src/stm32wlxx_hal_msp.c:95:6:HAL_UART_MspInit	3
 ../Core/Src/stm32wlxx_hal_msp.c:151:6:HAL_UART_MspDeInit	2
-../Core/Src/stm32wlxx_hal_msp.c:181:6:HAL_I2C_MspInit	3
-../Core/Src/stm32wlxx_hal_msp.c:230:6:HAL_I2C_MspDeInit	2
-../Core/Src/stm32wlxx_hal_msp.c:264:6:HAL_SUBGHZ_MspInit	2
-../Core/Src/stm32wlxx_hal_msp.c:288:6:HAL_SUBGHZ_MspDeInit	1
+../Core/Src/stm32wlxx_hal_msp.c:181:6:HAL_I2C_MspInit1	3
+../Core/Src/stm32wlxx_hal_msp.c:234:6:HAL_I2C_MspDeInit1	2
+../Core/Src/stm32wlxx_hal_msp.c:268:6:HAL_I2C_MspInit	3
+../Core/Src/stm32wlxx_hal_msp.c:317:6:HAL_I2C_MspDeInit	2
+../Core/Src/stm32wlxx_hal_msp.c:351:6:HAL_SUBGHZ_MspInit	2
+../Core/Src/stm32wlxx_hal_msp.c:375:6:HAL_SUBGHZ_MspDeInit	1
